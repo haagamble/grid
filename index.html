@@ -2,74 +2,129 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>6x6 Tile Puzzle</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tile Grid</title>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            padding: 20px;
+            height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(6, 80px);
-            grid-template-rows: repeat(6, 80px);
-            gap: 2px;
+            grid-template-columns: repeat(6, 100px);
+            grid-template-rows: repeat(6, 100px);
+            gap: 5px;
+            border: 2px solid #ccc;
         }
 
         .tile {
-            width: 80px;
-            height: 80px;
-            border: 1px solid #ccc;
-            background-size: cover;
-            background-position: center;
+            width: 100px;
+            height: 100px;
+            background-color: #ddd;
+            position: relative;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: transform 0.3s ease;
+            box-sizing: border-box;
         }
 
-        .label {
-            margin-top: 10px;
-            font-weight: bold;
+        .tile.selected {
+            outline: 3px solid orange;
+        }
+
+        .tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
         }
     </style>
 </head>
 
 <body>
-    <h1>Tile Puzzle Grid</h1>
-    <div class="grid" id="grid"></div>
-    <div class="label">Click a tile to rotate it!</div>
+    <div id="grid" class="grid"></div>
 
     <script>
         const grid = document.getElementById("grid");
+        let selectedTile = null;
 
-        // Create 6x6 tiles based on the row and column numbers
-        for (let row = 0; row < 6; row++) {
-            for (let col = 0; col < 6; col++) {
-                const tile = document.createElement("div");
-                tile.classList.add("tile");
+        function loadImages() {
+            const imageFolder = "images";
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 6; col++) {
+                    const img = document.createElement("img");
+                    img.src = `${imageFolder}/piece_${row}_${col}.jpg`;
+                    img.dataset.rotation = "0"; // Track rotation angle
 
-                // Construct the image URL based on the row and column
-                const imageUrl = `images/piece_${row}_${col}.jpg`;
+                    const tile = document.createElement("div");
+                    tile.classList.add("tile");
+                    tile.appendChild(img);
 
-                // Set the background image of the tile
-                tile.style.backgroundImage = `url('${imageUrl}')`;
-                tile.dataset.rotation = 0;
-
-                // On click, rotate 90 degrees clockwise
-                tile.addEventListener("click", () => {
-                    let rotation = (parseInt(tile.dataset.rotation) + 90) % 360;
-                    tile.style.transform = `rotate(${rotation}deg)`;
-                    tile.dataset.rotation = rotation;
-                });
-
-                // Add the tile to the grid
-                grid.appendChild(tile);
+                    tile.addEventListener("click", () => onTileClick(tile));
+                    grid.appendChild(tile);
+                }
             }
         }
+
+        function onTileClick(tile) {
+            if (selectedTile && selectedTile !== tile) {
+                swapTiles(selectedTile, tile);
+                deselectTile();
+            } else if (selectedTile === tile) {
+                deselectTile();
+            } else {
+                selectTile(tile);
+            }
+        }
+
+        function selectTile(tile) {
+            deselectTile();
+            selectedTile = tile;
+            tile.classList.add("selected");
+        }
+
+        function deselectTile() {
+            if (selectedTile) {
+                selectedTile.classList.remove("selected");
+                selectedTile = null;
+            }
+        }
+
+        function swapTiles(tile1, tile2) {
+            const img1 = tile1.querySelector("img");
+            const img2 = tile2.querySelector("img");
+
+            // Clone the image elements
+            const img1Clone = img1.cloneNode(true);
+            const img2Clone = img2.cloneNode(true);
+
+            // Replace each image with the other's clone
+            tile1.replaceChild(img2Clone, img1);
+            tile2.replaceChild(img1Clone, img2);
+        }
+
+
+        function rotateTile(tile) {
+            const img = tile.querySelector("img");
+            let rotation = parseInt(img.dataset.rotation || "0", 10);
+            rotation = (rotation + 90) % 360;
+            img.dataset.rotation = rotation;
+            img.style.transform = `rotate(${rotation}deg)`;
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "r" && selectedTile) {
+                rotateTile(selectedTile);
+            }
+        });
+
+        window.onload = loadImages;
     </script>
 </body>
 
